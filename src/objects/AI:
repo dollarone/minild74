@@ -1,0 +1,17 @@
+AI:
+
+
+
+if your moving --------> way OR if your moving <-------- way:
+		if /: turn left
+		if \: turn right
+		if -: set y to 0
+		if |: WTF
+
+if your moving up OR down::
+		if /: turn right
+		if \: turn left
+		if -: WTF
+		if |: set x to 0
+
+
