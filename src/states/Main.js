@@ -41,6 +41,8 @@ class Main extends Phaser.State {
     	this.game.camera.follow(this.player1.sprite)
     	this.player1.sprite.body.setCollisionGroup(this.playerCollisionGroup)
     	this.player1.sprite.body.collides([this.aiPlayersCollisionGroup])
+    	this.player1.sprite.body.onBeginContact.add(this.collide, this);
+		//this.player1.sprite.body.collides(this.aiPlayersCollisionGroup, this.collide, this)
 
     	let style = { font: 'bold 60pt Arial', fill: 'white', align: 'left', wordWrap: true, wordWrapWidth: 450 }
 
@@ -56,10 +58,37 @@ class Main extends Phaser.State {
 			let player = new Player(this.game, 450 + i*80, 100+ i*10)
 			let ai = new BasicAI(this.game, player, this.map.map)
 			player.setAI(ai)
-			this.ai_players.push(player)
 			player.sprite.body.setCollisionGroup(this.aiPlayersCollisionGroup)
 			player.sprite.body.collides([this.aiPlayersCollisionGroup, this.playerCollisionGroup])
+			//player.sprite.body.collides([this.aiPlayersCollisionGroup, this.playerCollisionGroup], this.collide, this)
+			player.sprite.body.onBeginContact.add(this.collide, this);
+			//player.sprite.body.collides(this.aiPlayersCollisionGroup, this.collide, this)
+			this.ai_players.push(player)
 		}
+
+		//this.player1.sprite.body.mass = 3
+		this.player1.maxSpeed = 301
+
+
+    }
+
+    collide2(car, car2) {
+    	car.acceleration = 0
+    	car.sprite.body.x +=1
+    	car.sprite.body.y +=1
+    	car.speed -= 10
+    	car2.acceleration = 0
+    	car2.speed -= 10
+    	car.sprite.body.x -=1
+    	car.sprite.body.y -=1
+    }
+
+    collide(car) {
+    	if (car != null) {
+	    	car.acceleration = 0
+	    	car.speed -= 10
+	    }
+    	
     }
 
 
@@ -71,7 +100,7 @@ class Main extends Phaser.State {
 		this.gameover = true;
 	}
 	killparticle(part, wall) {
-		part.kill();
+		//part.kill();
 	}
 	update() {
 		this.step += 1;

@@ -11,40 +11,68 @@ class Player {
     	//this.game.input.mouse.capture = true;
     	
     	this.sprite.body.collideWorldBounds = true;
-    	this.sprite.body.setRectangle(32, 64);
-    	
-    	//this.sprite.body.setSize(1,1,0,0);
-    	this.acceleration = 10
-    	this.speed = 100
-    	this.drag = 1
-    	this.maxSpeed = 2000
-    	this.maxBackingSpeed = 100
-    	this.maxAcceleration = 50
-    	this.maxBackingAcceleration = 20
+    	this.sprite.frame = game.rnd.integerInRange(0, 15)
 
-    	this.sprite.frame = game.rnd.integerInRange(0, 16)
-    	this.turning_factor = 4
+    	this.maxSpeed = 300
+		this.accelerationIncreasePerFrame = 0.1
+    	this.maxBackingSpeed = -60
+    	this.maxSpeedOnGrass = 40
+    	this.maxBackingSpeedOnGrass = -30
+
+    	if (this.sprite.frame == 6 || this.sprite.frame == 8 || this.sprite.frame == 10) {
+    		this.sprite.body.setRectangle(30, 48)
+    		this.sprite.body.mass = 3
+    		this.turningBonus = 20
+    		this.maxSpeed = 297
+			this.accelerationIncreasePerFrame = 0.11
+	    	this.maxBackingSpeed = -70
+    		this.maxSpeedOnGrass = 50
+    		this.maxBackingSpeedOnGrass = -40
+
+    	}
+    	else if (this.sprite.frame == 0 || this.sprite.frame == 1 || this.sprite.frame == 5 || this.sprite.frame == 11 || this.sprite.frame == 14) {
+    		this.sprite.body.setRectangle(24, 58)
+    		this.maxSpeed = 298
+    		this.turningBonus = 10
+			this.accelerationIncreasePerFrame = 0.11
+
+    	}
+    	else if (this.sprite.frame == 7 || this.sprite.frame == 13) {
+    		this.sprite.body.setRectangle(26, 56)
+    		this.maxSpeed = 299
+    		this.turningBonus = 2
+			this.accelerationIncreasePerFrame = 0.12
+
+    	}
+    	else {
+			this.sprite.body.setRectangle(28, 59)
+			this.maxSpeed = 300
+			this.accelerationIncreasePerFrame = 0.1
+
+    	}
+    	//this.maxSpeed = 300
+    	//this.sprite.body.setSize(1,1,0,0);
+    	this.acceleration = 0
+    	this.speed = 0
+    	this.drag = 1
+    	
+    	
+    	this.currentMaxSpeed = this.maxSpeed
+    	this.currentMaxBackingSpeed = this.maxBackingSpeed
+
+    	this.maxAcceleration = 3
+		this.maxBackingAcceleration = -2
+
+
     	this.onRoad = false
-    	//this.sprite.body.angle = -90
     	this.sprite.body.angle = 90
 //    	this.sprite.body.debug = true
     	this.ai = null
 		this.wantedAngle = 90
+		this.drowned = 2
+		this.dead = false
 	}
 
-	oooldupdate() {
-
-
-		if (this.game.input.activePointer.leftButton.isDown) {
-			this.angle -= this.mod;
-			this.sprite.angle = this.angle;
-		}
-		else if (this.game.input.activePointer.rightButton.isDown) {
-			this.angle += this.mod;
-			this.sprite.angle =this.angle;
-		}
-
-	}
 
 	setAI(ai) {
 		this.ai = ai
@@ -96,11 +124,29 @@ class Player {
 
 
     update(cursors, map) {
+    	if (this.dead) {
+    		return
+    	}
+    	if (this.drowned == 0) {
+    		this.sprite.kill()
+    		this.dead = true
+    		return
+    	}
+    	else if (this.drowned < 2) {
+    		this.drowned-=1
+    		this.sprite.frame = 17
+    		return
+    	}
 
     	if (this.ai != null) {
     		this.ai.update()
     		cursors = this.ai.cursors
     	}
+    	if (map.getTile(Math.floor(this.sprite.x/32), Math.floor(this.sprite.y/32), 'water') != null) {
+    		this.drowned-=1
+    		this.sprite.frame = 16
+    	}
+
     	if (map.getTile(Math.floor(this.sprite.x/32), Math.floor(this.sprite.y/32), 'road') != null) {
     		this.onRoad = true
     	}
@@ -108,79 +154,63 @@ class Player {
     		this.onRoad = false 
     	}
         if (cursors.up.isDown) {
-            this.acceleration = 1            
-        } else if (cursors.down.isDown) {            
-//            this.acceleration = -11
-this.sprite.body.reverse(100)
-        } else {
-            this.decreaseAcceleration(30)
+        	if (this.acceleration < 0) {
+        		this.acceleration = 0
+        	}
+            this.acceleration +=  this.accelerationIncreasePerFrame
+        } 
+        else if (cursors.down.isDown) {
+        	if (this.acceleration > 0) {
+        		this.acceleration = 0
+        	}
+            this.acceleration -= this.accelerationIncreasePerFrame*4
+        } 
+        else {
+        	this.acceleration = 0
         }
 
-        if (!this.onRoad) {
-			if (this.acceleration > 0) {
-				this.speed = 30
-			}
-			else if (this.acceleration < 0) {
-				this.speed = -30
-			}
-			else {
-				this.speed = 0
-			}
-			this.decreaseAcceleration(100)
-		}
-			
 
         if (cursors.left.isDown) {    
-        	this.sprite.body.rotateLeft(40*2)
+        	this.sprite.body.rotateLeft(40*this.speed/(100-this.turningBonus))
             //this.sprite.body.rotation -= 0.04//this.speed/100 //this.speed/this.turning_factor
        //     this.animations.play('left', 4, true);
         } else if (cursors.right.isDown) {
-        	this.sprite.body.rotateRight(40*2)
+        	this.sprite.body.rotateRight(40*this.speed/(100-this.turningBonus))
             //this.sprite.angle += 0.04//this.speed/100//4//this.speed/this.turning_factor
          //   this.animations.play('right', 4, true);
         } else {
         	this.sprite.body.setZeroRotation()
             //this.body.acceleration.x = 0;
         }        
-        if  (false && (this.speed > 0 && this.speed - this.drag < 0) || (this.speed < 0 && this.speed + this.drag > 0)) {
-        	this.speed = 0
-        	this.acceleration = 0
-        }
-        else {        	
-        	this.speed += this.acceleration
-        	//this.sprite.x = this.sprite.x + this.speed * Math.cos(this.sprite.angle * Math.PI / 180)
-        	//this.sprite.y = this.sprite.y + this.speed * Math.sin(this.sprite.angle * Math.PI / 180)
 
-			if (true || this.speed > 0 && cursors.up.isDown)
-    		{
-    			this.speed = 200
-//        		this.game.physics.p2.velocityFromRotation(this.sprite.rotation, this.speed, this.sprite.body.velocity);
-				
-    		}
+      	this.speed += this.acceleration
+
+        if (!this.onRoad) {
+        	this.currentMaxSpeed = this.maxSpeedOnGrass
+        	this.currentMaxBackingSpeed = this.maxBackingSpeedOnGrass
         }
-         if (cursors.down.isDown) {            
-//            this.acceleration = -11
-			this.sprite.body.reverse(100)
+        else {
+        	this.currentMaxSpeed = this.maxSpeed
+        	this.currentMaxBackingSpeed = this.maxBackingSpeed
+        }
+
+    	if (this.speed < 0) {
+    		if (this.speed < this.currentMaxBackingSpeed)
+        	this.speed = this.currentMaxBackingSpeed
+	        if (this.acceleration < this.maxBackingAcceleration) {
+	        	this.acceleration = this.maxBackingAcceleration
+	        }
+	    }
+	    else {
+	    	if (this.speed > this.currentMaxSpeed) {
+	        	this.speed = this.currentMaxSpeed
+		    }
+	        if (this.acceleration > this.maxAcceleration) {
+	        	this.acceleration = this.maxAcceleration
+	        }
 		}
-		else {
-			this.sprite.body.moveForward(this.speed)
-		}
 
-        if (this.speed > this.maxSpeed) {
-        	this.speed = this.maxSpeed
-        }
-        if (this.speed < this.maxBackingSpeed) {
-        	this.speed = this.maxBackingSpeed
-        }
-
-        if (this.acceleration > this.maxAcceleration) {
-        	this.acceleration = this.maxAcceleration
-        }
-
-        if (this.acceleration < this.maxBackingAcceleration) {
-        	this.acceleration = this.maxBackingAcceleration
-        }
-
+		this.sprite.body.moveForward(this.speed)
 
     }  
 }

@@ -141,10 +141,10 @@ class BasicAI {
 					break
 				case 0:
 					checkXfirst = false
-					minY -= 2
-					maxY -= 1
-					minX -= 2
-					maxX += 2
+					minY -= 1
+					maxY -= 0
+					minX -= 3
+					maxX += 3
 					//incY = -1
 					break
 				case 45:
